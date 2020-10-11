@@ -25,7 +25,7 @@ function Header() {
       </Link>
 
       <div className="header__search">
-        <input className="header__searchInput" type="text" />
+        <input className="header__searchInput" placeholder="You can only choose from existing products below. Search box is created with design purpose." type="text"/>
         <SearchIcon className="header__searchIcon" />
       </div>
 
