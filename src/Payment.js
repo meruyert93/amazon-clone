@@ -4,10 +4,12 @@ import "./Payment.css";
 import CurrencyFormat from "react-currency-format";
 import CheckoutProduct from "./CheckoutProduct";
 import { getBasketTotal } from "./reducer";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import axios from "./axios";
 
 function Payment() {
+  const history = useHistory();
   const [{ basket, user }, dispatch] = useStateValue();
 
   const stripe = useStripe();
@@ -27,13 +29,15 @@ function Payment() {
       const response = await axios({
         method: "post",
         //Stripe expects the total in a currencies subunits
-        url: `/payment/create?total=${getBasketTotal(basket)}`,
+        url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
       });
       setClientSecret(response.data.clientSecret);
     };
 
     getClientSecret();
   }, [basket]);
+
+  console.log("the secret is", clientSecret);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,6 +57,10 @@ function Payment() {
           setSucceeded(true);
           setError(null);
           setProcessing(false);
+
+          dispatch({
+            type: "EMPTY_BASKET",
+          });
         }
 
         history.replace("/orders");
