@@ -7,6 +7,7 @@ import { getBasketTotal } from "./reducer";
 import { Link, useHistory } from "react-router-dom";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import axios from "./axios";
+import { db } from "./firebase";
 
 function Payment() {
   const history = useHistory();
@@ -19,22 +20,34 @@ function Payment() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [disabled, setDisabled] = useState(true);
-  const [clientSecret, setClientSecret] = useState(true);
+  const [clientSecret, setClientSecret] = useState(null);
 
   useEffect(() => {
     // generate the special stripe secret which allows
     // to charge a customer
-
+    let unmounted = false;
     const getClientSecret = async () => {
-      const response = await axios({
-        method: "post",
-        //Stripe expects the total in a currencies subunits
-        url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
-      });
-      setClientSecret(response.data.clientSecret);
+      try {
+        const response = await axios({
+          method: "post",
+          //Stripe expects the total in a currencies subunits
+          url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
+        });
+        if (!unmounted) setClientSecret(response.data.clientSecret);
+      } catch (error) {
+        if (!unmounted) console.error(error);
+      }
     };
 
     getClientSecret();
+
+    return () => {
+      unmounted = true;
+      setClientSecret(null);
+      setProcessing(false);
+      setError(null);
+      setSucceeded(false);
+    };
   }, [basket]);
 
   console.log("the secret is", clientSecret);
@@ -43,25 +56,42 @@ function Payment() {
     e.preventDefault();
     setProcessing(true);
 
-    const payload = await stripe
+    await stripe
       .confirmCardPayment(clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement),
         },
       })
-      .then((response) => {
+      .then(({ paymentIntent }) => {
         // paymentIntent = payment confirmation
-        const { paymentIntent } = response;
+        console.log("paymentIntent", paymentIntent);
 
+        // if payment is confirmed, put items into db
         if (paymentIntent) {
+          try {
+            db.collection("users")
+              .doc(user?.uid)
+              .collection("orders")
+              .doc(paymentIntent.id)
+              .set({
+                basket: basket,
+                amount: paymentIntent.amount,
+                created: paymentIntent.created,
+              });
+          } catch (error) {
+            console.error(error);
+            alert(error.message);
+          }
+
           setSucceeded(true);
           setError(null);
           setProcessing(false);
-
-          dispatch({
-            type: "EMPTY_BASKET",
-          });
         }
+
+        // empty the store
+        dispatch({
+          type: "EMPTY_BASKET",
+        });
 
         history.replace("/orders");
       })
