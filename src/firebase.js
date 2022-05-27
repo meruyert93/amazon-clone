@@ -1,4 +1,11 @@
-import firebase from "firebase";
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { getAnalytics } from "firebase/analytics";
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCCD8hdBd-nvdaHERhCgYyemUcGIr1biMI",
@@ -11,10 +18,14 @@ const firebaseConfig = {
   measurementId: "G-N49W7ZDSKH",
 };
 
-// Initialize Firebase
-const firebaseApp = firebase.initializeApp(firebaseConfig);
-// Initialize db
-const db = firebaseApp.firestore();
-const auth = firebase.auth();
 
-export { db, auth };
+// Initialize Firebase
+const firebaseApp = initializeApp(firebaseConfig);
+
+const db = getFirestore();
+
+const auth = getAuth();
+
+const analytics = getAnalytics(firebaseApp);
+
+export { db, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword };

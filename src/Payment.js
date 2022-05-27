@@ -161,6 +161,9 @@ function Payment() {
             </form>
           </div>
         </div>
+        <div>
+        <p>Attention: Please don't enter your real card, This project is made for learning purpose</p>
+        </div>
       </div>
     </div>
   );
