@@ -62,6 +62,9 @@ function Home() {
             image="https://images-na.ssl-images-amazon.com/images/I/6125mFrzr6L._AC_SX355_.jpg"
           />
         </div>
+        <div>
+          The project was created for learning purpose
+        </div>
       </div>
     </div>
   );
